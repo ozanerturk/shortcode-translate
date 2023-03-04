@@ -1,0 +1,95 @@
+<html>
+	<body>
+        <script type="module">
+			import translate from "./translate.js";
+
+
+			function run() {
+				let input = document.getElementById("input-ta").value;
+				let output = document.getElementById("output-ta");
+				let fromLang = document.getElementById("from-lang").value;
+				let toLang = document.getElementById("to-lang").value;
+                output.value="loading..."
+                console.log(input,fromLang,toLang);
+				translate(input,fromLang,toLang).then((result) => {
+					console.log("here", result);
+                    output.value=result;
+				});
+			}
+            window.run=run;
+		</script>
+		<div
+			style="
+				display: flex;
+				width: 90%;
+				height: 90%;
+				margin: 0 auto;
+				margin-top: 30px;
+			"
+		>
+			<div class="input">
+				<textarea id="input-ta" placeholder="write raw "> </textarea>
+			</div>
+			<div class="middle">
+				<table>
+					<tr>
+						<td><label>From Language</label></td>
+						<td><label>To Language</label></td>
+					</tr>
+					<tr>
+						<td>
+							<select id="from-lang">
+								<option value="tr">Türkçe</option>
+								<option value="en" selected>English</option>
+							</select>
+						</td>
+						<td>
+							<select id="to-lang">
+								<option value="tr" selected>Türkçe</option>
+								<option value="en">English</option>
+							</select>
+						</td>
+					</tr>
+				</table>
+				<button onclick="run()">Translate</button>
+			</div>
+			<div class="output">
+				<textarea id="output-ta" readonly> </textarea>
+			</div>
+		</div>
+		
+	</body>
+	<style>
+		html,
+		body {
+			margin: 0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+		}
+		.middle * {
+			font-size: 14px;
+		}
+
+		.middle {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
+		.input,
+		.output {
+			flex: 1;
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
+
+		textarea {
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</html>
