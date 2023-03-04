@@ -10,9 +10,8 @@
 				let fromLang = document.getElementById("from-lang").value;
 				let toLang = document.getElementById("to-lang").value;
                 output.value="loading..."
-                console.log(input,fromLang,toLang);
 				translate(input,fromLang,toLang).then((result) => {
-					console.log("here", result);
+                    console.log("result",result);
                     output.value=result;
 				});
 			}

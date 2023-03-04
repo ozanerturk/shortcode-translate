@@ -48,13 +48,24 @@ function canTranslate(text, n = 2) {
     return true;
 }
 
+async function stringReplaceAsync(str, regex, asyncFn) {
+    const promises = [];
+    str.replace(regex, (match, ...args) => {
+        const promise = asyncFn(match, ...args);
+        promises.push(promise);
+    });
+    const data = await Promise.all(promises);
+    return str.replace(regex, () => data.shift());
+}
+
 function translateTextFromGoogle(text, from, to) {
+    // return Promise.resolve(text);
     return new Promise((resolve, reject) => {
         fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + from + '&tl=' + to + '&dt=t&q=' + encodeURI(text))
             .then(response => response.json())
             .then(data => {
-                let d = data[0][0][0];
-                console.log(d);
+                let d = data[0].map(x=>x[0]).join('\n')
+                // let d = data[0][0][0];
                 resolve(d);
 
             });
@@ -62,6 +73,7 @@ function translateTextFromGoogle(text, from, to) {
 }
 async function translate(text, from, to) {
     if (!canTranslate(text)) {
+        console.log("CANNOT TRANSLATE:", text);
         return text;
     }
     let d = await translateTextFromGoogle(text, from, to);
@@ -75,51 +87,31 @@ async function translate(text, from, to) {
 
 async function translateAttributes(content, from, to) {
     console.log("translateAttributes");
-    const regex = /(\w+)="(.*?)"/g;
-    let m;
-    while ((m = regex.exec(content)) !== null) {
-        // This is necessary to avoid infinite loops with zero-width matches
-        if (m.index === regex.lastIndex) {
-            regex.lastIndex++;
+    const regex = /(?<name>\w+)="(?<value>.*?)"/g;
+    return stringReplaceAsync(content, regex, async (match, name, value, offset, string, groups) => {
+        let translated = await translate(value, from, to);
+        if (translated != value) {
+            console.log("TRANSLATE FROM:", value, "\n TO:", translated);
+            value = translated;
         }
-
-        // replace only value
-        for (let i = 2; i < m.length; i++) {
-            let text = m[i];
-            if (text.length > 0) {
-                let translated = await translate(text, from, to);
-                console.log(text, translated);
-                content = content.replace(text, translated);
-            }
-        }
-    }
-    return content;
+        return `${name}="${value}"}`;
+    });
 }
 async function translateContent(content, from, to) {
     console.log("translateContent");
-    const regex = /\](.*?)\[/g;
-    let m;
-    while ((m = regex.exec(content)) !== null) {
-        // This is necessary to avoid infinite loops with zero-width matches
-        if (m.index === regex.lastIndex) {
-            regex.lastIndex++;
-        }
+    const regex = /(?<g1>\])(?<text>[\s\S]*?)(?<g2>\[)/g;
 
-        // The result can be accessed through the `m`-variable.
-        for (let i = 1; i < m.length; i++) {
-            let text = m[i];
-            if (text.length > 0) {
-                let translated = await translate(text, from, to);
-                console.log(text, translated);
-                content = content.replace(text, translated);
-            }
+    return stringReplaceAsync(content, regex, async (match, g1, text, g2, offset, string, groups) => {
+        let translated = await translate(text, from, to);
+        if (translated != text) {
+            console.log("TRANSLATE FROM:", text, "\n TO:", translated);
+            text = translated;
         }
-    }
-
-    return content;
+        return g1 + text + g2;
+    });
 }
 
 export default function (content, from, to) {
     return translateContent(content, from, to)
-        .then(translateAttributes, from, to);
+        .then((content) => translateAttributes(content, from, to));
 }

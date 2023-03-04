@@ -6,8 +6,6 @@ const filePath = path.join(__dirname, 'raw_content.txt');
 let content = fs.readFileSync(filePath, 'utf8');
 
 import translate from './translate.js';
-const fromLang = 'en';
-const toLang = 'tr';
 
 //translate content
 translate(content).then(x => {
