@@ -94,7 +94,7 @@ async function translateAttributes(content, from, to) {
             console.log("TRANSLATE FROM:", value, "\n TO:", translated);
             value = translated;
         }
-        return `${name}="${value}"}`;
+        return `${name}="${value}"`;
     });
 }
 async function translateContent(content, from, to) {
